@@ -7,10 +7,14 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.Loader;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.constraint.ConstraintLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.graphics.Palette;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.text.Html;
@@ -19,6 +23,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.xyzreader.R;
@@ -26,6 +31,7 @@ import com.example.xyzreader.data.ArticleLoader;
 import com.example.xyzreader.data.ItemsContract;
 import com.example.xyzreader.data.UpdaterService;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -146,8 +152,8 @@ public class ArticleListActivity extends AppCompatActivity implements
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    startActivity(new Intent(Intent.ACTION_VIEW,
-                            ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition()))));
+                    Intent intent = new Intent(Intent.ACTION_VIEW, ItemsContract.Items.buildItemUri(getItemId(vh.getAdapterPosition())));
+                    startActivity(intent);
                 }
             });
             return vh;
@@ -165,40 +171,65 @@ public class ArticleListActivity extends AppCompatActivity implements
         }
 
         @Override
-        public void onBindViewHolder(ViewHolder holder, int position) {
+        public void onBindViewHolder(final ViewHolder holder, int position) {
             mCursor.moveToPosition(position);
             holder.titleView.setText(mCursor.getString(ArticleLoader.Query.TITLE));
             Date publishedDate = parsePublishedDate();
             if (!publishedDate.before(START_OF_EPOCH.getTime())) {
 
                 holder.subtitleView.setText(Html.fromHtml(
-                        DateUtils.getRelativeTimeSpanString(
-                                publishedDate.getTime(),
-                                System.currentTimeMillis(), DateUtils.HOUR_IN_MILLIS,
-                                DateUtils.FORMAT_ABBREV_ALL).toString()
-                                + "<br/>" + " by "
-                                + mCursor.getString(ArticleLoader.Query.AUTHOR)));
+                        mCursor.getString(ArticleLoader.Query.AUTHOR)
+                                + "<br/>" +
+                                DateUtils.getRelativeTimeSpanString(
+                                        publishedDate.getTime(),
+                                        System.currentTimeMillis(), DateUtils.HOUR_IN_MILLIS,
+                                        DateUtils.FORMAT_ABBREV_ALL).toString()));
             } else {
                 holder.subtitleView.setText(Html.fromHtml(
-                        outputFormat.format(publishedDate)
-                        + "<br/>" + " by "
-                        + mCursor.getString(ArticleLoader.Query.AUTHOR)));
+                        mCursor.getString(ArticleLoader.Query.AUTHOR)
+                                + "<br/>" + outputFormat.format(publishedDate)));
             }
 
             Uri thumbUri = Uri.parse(mCursor.getString(ArticleLoader.Query.THUMB_URL));
             Log.d(TAG, thumbUri.toString());
             Picasso.with(holder.thumbnailView.getContext())
-                    .load(thumbUri)
+                    .load(mCursor.getString(ArticleLoader.Query.THUMB_URL))
                     .placeholder(R.drawable.logo)
                     .error(R.drawable.logo)
-                    .into(holder.thumbnailView, new com.squareup.picasso.Callback() {
+                    .into(new Target() {
                         @Override
-                        public void onSuccess() {
-                            //do smth when picture is loaded successfully
+                        public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                            Log.d(TAG, "loaded");
+                            holder.thumbnailView.setImageBitmap(bitmap);
+                            Palette.from(bitmap)
+                                    .generate(new Palette.PaletteAsyncListener() {
+                                        @Override
+                                        public void onGenerated(Palette palette) {
+                                            Palette.Swatch textSwatch = palette.getVibrantSwatch();
+                                            if (textSwatch == null) {
+                                                Log.d(TAG, "getVibrantSwatch null");
+                                                textSwatch = palette.getDarkVibrantSwatch();
+                                            }
+                                            if (textSwatch == null) {
+                                                Log.d(TAG, "getDarkVibrantSwatch null");
+                                                textSwatch = palette.getMutedSwatch();
+                                            }
+                                            if (textSwatch == null) {
+                                                Log.d(TAG, "getMutedSwatch null");
+                                                return;
+                                            }
+                                            holder.textBackground.setBackgroundColor(textSwatch.getRgb());
+//                                            holder.titleView.setTextColor(textSwatch.getBodyTextColor());
+//                                            bodyColorText.setTextColor(textSwatch.getBodyTextColor());
+                                        }
+                                    });
                         }
                         @Override
-                        public void onError() {
-                            //do smth when there is picture loading error
+                        public void onBitmapFailed(Drawable errorDrawable) {
+                            Log.d(TAG, "failed");
+                        }
+                        @Override
+                        public void onPrepareLoad(Drawable placeHolderDrawable) {
                         }
                     });
         }
@@ -213,12 +244,14 @@ public class ArticleListActivity extends AppCompatActivity implements
         public ImageView thumbnailView;
         public TextView titleView;
         public TextView subtitleView;
+        public ConstraintLayout textBackground;
 
         public ViewHolder(View view) {
             super(view);
             thumbnailView = view.findViewById(R.id.thumbnail);
             titleView = view.findViewById(R.id.article_title);
             subtitleView = view.findViewById(R.id.article_subtitle);
+            textBackground = view.findViewById(R.id.cl_card);
         }
     }
 }

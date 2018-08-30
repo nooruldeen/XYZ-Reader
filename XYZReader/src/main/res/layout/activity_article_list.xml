@@ -24,7 +24,6 @@
     </android.support.v4.widget.SwipeRefreshLayout>
 
     <android.support.design.widget.AppBarLayout
-
         android:id="@+id/toolbar_container"
         android:layout_width="match_parent"
         android:layout_height="@dimen/appbar_header_height"
@@ -40,16 +39,6 @@
             app:expandedTitleMarginStart="@dimen/activity_margin_content"
             app:layout_scrollFlags="scroll|exitUntilCollapsed|snap">
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fitsSystemWindows="true"
-                android:scaleType="centerCrop"
-                app:layout_collapseMode="parallax"
-                android:layout_gravity="bottom"
-                android:src="@drawable/logo"
-                android:contentDescription="@string/app_name" />
-
             <View
                 android:layout_width="match_parent"
                 android:layout_height="160dp"
@@ -60,8 +49,9 @@
                 android:id="@+id/tb_article_activity"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
+                app:title="XYZ Reader"
                 app:layout_collapseMode="pin"
-                app:theme="@style/ThemeOverlay.AppCompat.Dark"/>
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
 
         </android.support.design.widget.CollapsingToolbarLayout>
     </android.support.design.widget.AppBarLayout>
