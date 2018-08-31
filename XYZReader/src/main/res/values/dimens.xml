@@ -11,5 +11,6 @@
     <dimen name="appbar_header_height">112dp</dimen>
     <dimen name="card_margin">4dp</dimen>
     <dimen name="card_radius">4dp</dimen>
+    <dimen name="appbar_article_height">280dp</dimen>
 
 </resources>
