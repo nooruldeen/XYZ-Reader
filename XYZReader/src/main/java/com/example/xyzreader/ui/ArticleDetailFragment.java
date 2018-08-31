@@ -20,7 +20,9 @@ import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.app.ShareCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.graphics.Palette;
+import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.text.format.DateUtils;
 import android.text.method.LinkMovementMethod;
@@ -29,13 +31,17 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toolbar;
 
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
+import com.elmargomez.typer.Font;
+import com.elmargomez.typer.Typer;
 import com.example.xyzreader.R;
 import com.example.xyzreader.data.ArticleLoader;
+import com.github.florent37.picassopalette.PicassoPalette;
+import com.squareup.picasso.Picasso;
 
 /**
  * A fragment representing a single Article detail screen. This fragment is
@@ -116,6 +122,12 @@ public class ArticleDetailFragment extends Fragment implements
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
+
+        final Toolbar toolbar = getActivity().findViewById(R.id.article_title);
+        ((AppCompatActivity)getActivity()).setSupportActionBar(toolbar);
+        if (((AppCompatActivity)getActivity()).getSupportActionBar() != null)
+            ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         mRootView = inflater.inflate(R.layout.fragment_article_detail, container, false);
         mCoordinatorLayout = mRootView.findViewById(R.id.cl_layout_fragment);
 
@@ -182,6 +194,7 @@ public class ArticleDetailFragment extends Fragment implements
             return;
         }
 
+        LinearLayout titleLayout = mRootView.findViewById(R.id.meta_bar);
         CollapsingToolbarLayout titleView = mRootView.findViewById(R.id.collapsing_toolbar);
         TextView bylineView = mRootView.findViewById(R.id.article_byline);
         bylineView.setMovementMethod(new LinkMovementMethod());
@@ -189,6 +202,7 @@ public class ArticleDetailFragment extends Fragment implements
 
 
         bodyView.setTypeface(Typeface.createFromAsset(getResources().getAssets(), "Rosario-Regular.ttf"));
+//        bodyView.setTypeface(Typer.set(this.getContext()).getFont(Font.ROBOTO_BLACK));
 
         if (mCursor != null) {
             mRootView.setAlpha(0);
@@ -214,27 +228,24 @@ public class ArticleDetailFragment extends Fragment implements
                                 + "</font>"));
 
             }
-            bodyView.setText(Html.fromHtml(mCursor.getString(ArticleLoader.Query.BODY).replaceAll("(\r\n|\n)", "<br />")));
-            ImageLoaderHelper.getInstance(getActivity()).getImageLoader()
-                    .get(mCursor.getString(ArticleLoader.Query.PHOTO_URL), new ImageLoader.ImageListener() {
-                        @Override
-                        public void onResponse(ImageLoader.ImageContainer imageContainer, boolean b) {
-                            Bitmap bitmap = imageContainer.getBitmap();
-                            if (bitmap != null) {
-                                Palette p = Palette.generate(bitmap, 12);
-                                mMutedColor = p.getDarkMutedColor(0xFF333333);
-                                mPhotoView.setImageBitmap(imageContainer.getBitmap());
-                                mRootView.findViewById(R.id.meta_bar)
-                                        .setBackgroundColor(mMutedColor);
-                                updateStatusBar();
-                            }
-                        }
+            bodyView.setText(Html.fromHtml(mCursor.getString(ArticleLoader.Query.BODY).replaceAll("(\r\n|\n){2,}", "<br />")));
 
-                        @Override
-                        public void onErrorResponse(VolleyError volleyError) {
+            // Load image
 
-                        }
-                    });
+            String photoUrlString = mCursor.getString(ArticleLoader.Query.PHOTO_URL);
+            Picasso.with(getActivity())
+                    .load(photoUrlString)
+                    .placeholder(R.drawable.empty_detail)
+                    .error(R.drawable.empty_detail)
+                    .into(mPhotoView,
+                            PicassoPalette.with(photoUrlString, mPhotoView)
+                                    .use(PicassoPalette.Profile.MUTED_DARK)
+                                    .intoBackground(titleLayout)
+
+                                    .use(PicassoPalette.Profile.VIBRANT)
+                                    .intoBackground(titleLayout, PicassoPalette.Swatch.RGB)
+                    );
+
         } else {
             mRootView.setVisibility(View.GONE);
             titleView.setTitle("N/A");

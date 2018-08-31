@@ -68,4 +68,8 @@ dependencies {
 
     // Picasso library
     implementation "com.squareup.picasso:picasso:${picassoVersion}"
+    implementation 'com.github.florent37:picassopalette:2.0.0'
+
+    // Fonts lib - Roboto
+    implementation 'com.elmargomez.typer:typerlib:1.0.0'
 }
