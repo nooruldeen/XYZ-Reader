@@ -23,7 +23,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.xyzreader.R;
@@ -239,17 +238,19 @@ public class ArticleListActivity extends AppCompatActivity implements
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        public ImageView thumbnailView;
-        public TextView titleView;
-        public TextView subtitleView;
-        public ConstraintLayout textBackground;
+
+        @BindView(R.id.article_title)
+        TextView titleView;
+        @BindView(R.id.article_subtitle)
+        TextView subtitleView;
+        @BindView(R.id.cl_card)
+        ConstraintLayout textBackground;
+        @BindView(R.id.thumbnail)
+        ImageView thumbnailView;
 
         public ViewHolder(View view) {
             super(view);
-            thumbnailView = view.findViewById(R.id.thumbnail);
-            titleView = view.findViewById(R.id.article_title);
-            subtitleView = view.findViewById(R.id.article_subtitle);
-            textBackground = view.findViewById(R.id.cl_card);
+            ButterKnife.bind(this, view);
         }
     }
 }

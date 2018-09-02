@@ -5,9 +5,7 @@ import android.app.LoaderManager;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 
@@ -21,7 +19,6 @@ import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.v4.app.ShareCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.text.format.DateUtils;
@@ -34,10 +31,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.ImageLoader;
-import com.elmargomez.typer.Font;
-import com.elmargomez.typer.Typer;
 import com.example.xyzreader.R;
 import com.example.xyzreader.data.ArticleLoader;
 import com.github.florent37.picassopalette.PicassoPalette;
@@ -123,12 +116,20 @@ public class ArticleDetailFragment extends Fragment implements
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
 
-        final Toolbar toolbar = getActivity().findViewById(R.id.article_title);
+        mRootView = inflater.inflate(R.layout.fragment_article_detail, container, false);
+
+        final Toolbar toolbar = mRootView.findViewById(R.id.article_title);
         ((AppCompatActivity)getActivity()).setSupportActionBar(toolbar);
         if (((AppCompatActivity)getActivity()).getSupportActionBar() != null)
             ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        mRootView = inflater.inflate(R.layout.fragment_article_detail, container, false);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ((AppCompatActivity) getActivity()).onSupportNavigateUp();
+            }
+        });
+
         mCoordinatorLayout = mRootView.findViewById(R.id.cl_layout_fragment);
 
         mPhotoView = (ImageView) mRootView.findViewById(R.id.photo);
@@ -145,7 +146,7 @@ public class ArticleDetailFragment extends Fragment implements
             }
         });
 
-        bindViews();
+//        bindViews();
         updateStatusBar();
         return mRootView;
     }
@@ -228,7 +229,9 @@ public class ArticleDetailFragment extends Fragment implements
                                 + "</font>"));
 
             }
-            bodyView.setText(Html.fromHtml(mCursor.getString(ArticleLoader.Query.BODY).replaceAll("(\r\n|\n){2,}", "<br />")));
+            bodyView.setText(Html.fromHtml(mCursor.getString(ArticleLoader.Query.BODY)
+                    .substring(0,1000)
+                    .replaceAll("(\r\n|\n){2,}", "<br />")));
 
             // Load image
 
@@ -284,14 +287,4 @@ public class ArticleDetailFragment extends Fragment implements
         bindViews();
     }
 
-    public int getUpButtonFloor() {
-        if (mPhotoView == null || mPhotoView.getHeight() == 0) {
-            return Integer.MAX_VALUE;
-        }
-
-        // account for parallax
-        return mIsCard
-                ? (int) mPhotoView.getTranslationY() + mPhotoView.getHeight() - mScrollY
-                : mPhotoView.getHeight() - mScrollY;
-    }
 }
